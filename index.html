@@ -5,16 +5,33 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>ColdChainX – CCaaP Prototype</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/framer-motion@11.0.0/dist/framer-motion.umd.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    html,body,#root{height:100%}body{background:#fafafa}.util-bar{height:10px;border-radius:9999px;overflow:hidden;background:#eee}.util-fill{height:100%}
+    html,body,#root{height:100%}body{background:#fafafa}
+    .util-bar{height:10px;border-radius:9999px;overflow:hidden;background:#eee}
+    .util-fill{height:100%}
+    #errbox{position:fixed;bottom:12px;right:12px;max-width:420px;background:#fff3cd;border:1px solid #ffeeba;border-radius:12px;padding:12px;font:12px/1.4 system-ui,Segoe UI,Arial}
+    #errbox h4{margin:0 0 6px 0;font-weight:600}
   </style>
 </head>
 <body>
+  <noscript>This app needs JavaScript enabled.</noscript>
   <div id="root"></div>
+  <div id="errbox" style="display:none">
+    <h4>Client error</h4>
+    <div id="errmsg"></div>
+  </div>
+  <script>
+    window.addEventListener("error", function(e){
+      var box=document.getElementById("errbox"), msg=document.getElementById("errmsg");
+      if(box&&msg){ box.style.display="block"; msg.textContent=(e && e.error && e.error.stack) ? e.error.stack : (e.message||"Unknown error"); }
+      console.error("Runtime error:", e.error || e.message || e);
+    });
+  </script>
+
   <script type="text/babel" data-presets="react">
     const {useMemo,useState}=React;
     const {createRoot}=ReactDOM;
@@ -28,10 +45,10 @@
       {id:"LOT-NSK-003",crop:"Pomegranate",variety:"Bhagwa",weight:600,score:87,days:6},
     ];
     const nextLotId=(countSoFar,prefix="LOT-NSK-")=>{
-      const n=countSoFar+1, padded=String(n).padStart(3,"0"); return `${prefix}${padded}`;
+      const n=countSoFar+1, padded=String(n).padStart(3,"0"); return prefix+padded;
     };
 
-    function Header({role,setRole,navigate}) {
+    function Header({role,setRole,navigate}){
       return (
         <div className="flex items-center justify-between py-4">
           <div className="text-2xl font-bold">ColdChainX</div>
@@ -45,7 +62,7 @@
       );
     }
 
-    function SubHeader({title,onBack}) {
+    function SubHeader({title,onBack}){
       return (
         <div className="flex items-center gap-3 mb-4">
           <button onClick={onBack} className="px-3 py-1 rounded-xl border">← Back</button>
@@ -54,7 +71,7 @@
       );
     }
 
-    function KPI({label,value,hint}) {
+    function KPI({label,value,hint}){
       return (
         <div className="rounded-2xl shadow p-4">
           <div className="text-gray-500 text-sm" title={hint}>{label}</div>
@@ -63,12 +80,12 @@
       );
     }
 
-    function ScoreChip({score}) {
+    function ScoreChip({score}){
       const color=score>=90?"bg-green-100 text-green-800":score>=75?"bg-yellow-100 text-yellow-800":"bg-red-100 text-red-800";
       return <span className={`px-2 py-1 rounded-full text-xs ${color}`}>{score}</span>;
     }
 
-    function FPOView({navigate}) {
+    function FPOView({navigate}){
       const [lots,setLots]=useState(seedLots);
       const [form,setForm]=useState({crop:"",variety:"",weight:""});
       const addLot=()=>{
@@ -82,7 +99,7 @@
         <div className="grid gap-6">
           <div className="grid grid-cols-3 gap-4">
             <KPI label="Accepted-weight %" value="82%" hint="Accepted weight / total delivered in last 30 days"/>
-            <KPI label="Active lots" value={`${lots.length}`}/>
+            <KPI label="Active lots" value={""+lots.length}/>
             <KPI label="Next payout" value="T+2 days"/>
           </div>
           <div className="rounded-2xl border p-4 grid gap-3">
@@ -120,7 +137,7 @@
       );
     }
 
-    function PreCoolBookingPage({onBack,lotId}) {
+    function PreCoolBookingPage({onBack,lotId}){
       const [store,setStore]=useState("Nashik Packhouse A");
       const [slot,setSlot]=useState("Today 6–8 PM");
       const [confirmed,setConfirmed]=useState(false);
@@ -130,7 +147,7 @@
           <div className="grid md:grid-cols-2 gap-4">
             <div className="rounded-2xl border p-4 grid gap-3">
               <div className="text-sm text-gray-600">Lot</div>
-              <input className="border p-2 rounded-xl" value={lotId||"Select from My Lots"} readOnly/>
+              <input className="border p-2 rounded-xl" value={lotId || "Select from My Lots"} readOnly/>
               <div className="text-sm text-gray-600">Packhouse</div>
               <select className="border p-2 rounded-xl" value={store} onChange={e=>setStore(e.target.value)}>
                 <option>Nashik Packhouse A</option>
@@ -144,7 +161,7 @@
                 <option>Tomorrow 6–8 AM</option>
               </select>
               <button className="px-4 py-2 rounded-xl bg-gray-900 text-white" onClick={()=>setConfirmed(true)}>Confirm Booking</button>
-              {confirmed&&<div className="text-green-700 text-sm">Booked! Gate pass & QR sent to your app.</div>}
+              {confirmed && <div className="text-green-700 text-sm">Booked! Gate pass & QR sent to your app.</div>}
             </div>
             <div className="rounded-2xl border p-4 text-sm">
               <div className="font-semibold mb-2">Slot Utilization</div>
@@ -159,13 +176,13 @@
       );
     }
 
-    function FindReeferPage({onBack,lotId}) {
+    function FindReeferPage({onBack,lotId}){
       const [origin,setOrigin]=useState("Nashik");
       const [dest,setDest]=useState("Mumbai DC");
       const [date,setDate]=useState(new Date().toISOString().slice(0,10));
       const [coLoad,setCoLoad]=useState(true);
       const estimate=useMemo(()=>{
-        const base=9000, co=coLoad?-1200:0, dist=dest.includes("Pune")?-300:0;
+        const base=9000, co=coLoad?-1200:0, dist=dest.indexOf("Pune")>-1?-300:0;
         return base+co+dist;
       },[coLoad,dest]);
       return (
@@ -174,7 +191,7 @@
           <div className="grid md:grid-cols-2 gap-4">
             <div className="rounded-2xl border p-4 grid gap-3">
               <label className="text-sm text-gray-600">Lot</label>
-              <input className="border p-2 rounded-xl" value={lotId||"Select from My Lots"} readOnly/>
+              <input className="border p-2 rounded-xl" value={lotId || "Select from My Lots"} readOnly/>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className="text-sm text-gray-600">Origin</div>
@@ -219,7 +236,7 @@
       );
     }
 
-    function DistributorView({navigate}) {
+    function DistributorView({navigate}){
       return (
         <div className="grid gap-6">
           <div className="grid grid-cols-3 gap-4">
@@ -263,13 +280,13 @@
       );
     }
 
-    function NudgeSOPPage({onBack,lotId}) {
+    function NudgeSOPPage({onBack,lotId}){
       const [nudge,setNudge]=useState("Close doors / reduce openings");
       const [note,setNote]=useState("");
       const [sent,setSent]=useState(false);
       return (
         <div>
-          <SubHeader title={`Nudge SOP – ${lotId||"Select lot"}`} onBack={onBack}/>
+          <SubHeader title={"Nudge SOP – "+(lotId||"Select lot")} onBack={onBack}/>
           <div className="rounded-2xl border p-4 grid gap-3 max-w-2xl">
             <div className="text-sm text-gray-600">Action</div>
             <select className="border p-2 rounded-xl" value={nudge} onChange={e=>setNudge(e.target.value)}>
@@ -281,19 +298,19 @@
             <div className="text-sm text-gray-600">Optional note</div>
             <textarea className="border p-2 rounded-xl" rows={3} value={note} onChange={e=>setNote(e.target.value)} placeholder="Add context for the driver / hub"/>
             <button className="px-4 py-2 rounded-xl bg-gray-900 text-white" onClick={()=>setSent(true)}>Send Nudge</button>
-            {sent&&<div className="text-green-700 text-sm">Nudge sent to driver + hub. Auto-logged to shipment timeline.</div>}
+            {sent && <div className="text-green-700 text-sm">Nudge sent to driver + hub. Auto-logged to shipment timeline.</div>}
           </div>
         </div>
       );
     }
 
-    function ReroutePage({onBack,lotId}) {
+    function ReroutePage({onBack,lotId}){
       const [dest,setDest]=useState("Mumbai DC");
       const [reason,setReason]=useState("Avoid congestion / meet cut-off");
       const [delta]=useState({eta:"+38 min",cost:900});
       return (
         <div>
-          <SubHeader title={`Reroute – ${lotId||"Select lot"}`} onBack={onBack}/>
+          <SubHeader title={"Reroute – "+(lotId||"Select lot")} onBack={onBack}/>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="rounded-2xl border p-4 grid gap-3">
               <div className="text-sm text-gray-600">New destination</div>
@@ -329,13 +346,13 @@
       );
     }
 
-    function DisputePage({onBack,lotId}) {
+    function DisputePage({onBack,lotId}){
       const [type,setType]=useState("Temp breach claim");
       const [desc,setDesc]=useState("");
       const [raised,setRaised]=useState(false);
       return (
         <div>
-          <SubHeader title={`Raise Dispute – ${lotId||"Select lot"}`} onBack={onBack}/>
+          <SubHeader title={"Raise Dispute – "+(lotId||"Select lot")} onBack={onBack}/>
           <div className="rounded-2xl border p-4 grid gap-3 max-w-2xl">
             <div className="grid md:grid-cols-2 gap-3">
               <div>
@@ -355,13 +372,13 @@
             <textarea className="border p-2 rounded-xl" rows={4} value={desc} onChange={e=>setDesc(e.target.value)} placeholder="Describe issue, location, timestamp…"/>
             <div className="rounded-xl bg-gray-50 p-3 text-sm">Auto-attach: telemetry snippet, location, Freshness Score timeline.</div>
             <button className="px-4 py-2 rounded-xl bg-gray-900 text-white" onClick={()=>setRaised(true)}>Submit Dispute</button>
-            {raised&&<div className="text-green-700 text-sm">Dispute submitted. SLA: &lt; 48h. Tracking ID mailed.</div>}
+            {raised && <div className="text-green-700 text-sm">Dispute submitted. SLA: &lt; 48h. Tracking ID mailed.</div>}
           </div>
         </div>
       );
     }
 
-    function RetailerView({onBuy,cart,setCart}) {
+    function RetailerView({onBuy,cart,setCart}){
       const [sortKey,setSortKey]=useState("score");
       const sorted=useMemo(()=>{
         const arr=[...seedLots];
@@ -432,7 +449,9 @@
                     <div className="text-sm">{it.lot.crop} • {it.lot.variety} ({it.lot.id})</div>
                     <div className="flex items-center gap-2">
                       <button className="px-2 py-1 rounded-lg border" onClick={()=>{
-                        const copy=[...cart]; copy[idx].qty=Math.max(0,copy[idx].qty-100); setCart(copy.filter(x=>x.qty>0));
+                        const copy=[...cart]; copy[idx].qty=Math.max(0,copy[idx].qty-100); 
+                        const filtered=copy.filter(x=>x.qty>0); 
+                        setCart(filtered);
                       }}>-100kg</button>
                       <div className="w-24 text-right">{it.qty} kg</div>
                       <button className="px-2 py-1 rounded-lg border" onClick={()=>{
@@ -453,7 +472,7 @@
       );
     }
 
-    function CartPage({onBack,items,setItems}) {
+    function CartPage({onBack,items,setItems}){
       const totalKg=items.reduce((s,i)=>s+i.qty,0);
       return (
         <div>
@@ -495,7 +514,7 @@
       const onBuy=lot=>{
         setCart(prev=>{
           const idx=prev.findIndex(p=>p.lot.id===lot.id);
-          if(idx>=0){const copy=[...prev]; copy[idx].qty+=100; return copy;}
+          if(idx>=0){ const copy=[...prev]; copy[idx].qty+=100; return copy; }
           return [...prev,{lot,qty:100}];
         });
       };
@@ -503,15 +522,15 @@
       return (
         <div className="max-w-6xl mx-auto p-6">
           <Header role={role} setRole={setRole} navigate={navigate}/>
-          <Shell key={`${role}-${route.name}`} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} className="mt-4">
+          <Shell key={role+"-"+route.name} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} className="mt-4">
             {route.name==="home"&&role==="FPO"&&<FPOView navigate={navigate}/>}
             {route.name==="home"&&role==="Distributor"&&<DistributorView navigate={navigate}/>}
             {route.name==="home"&&role==="Retailer"&&<RetailerView onBuy={onBuy} cart={cart} setCart={setCart}/>}
-            {route.name==="fpo.pre-cool"&&<PreCoolBookingPage onBack={()=>navigate({name:"home"})} lotId={route.params&&route.params.lotId}/>}
-            {route.name==="fpo.find-reefer"&&<FindReeferPage onBack={()=>navigate({name:"home"})} lotId={route.params&&route.params.lotId}/>}
-            {route.name==="dist.nudge"&&<NudgeSOPPage onBack={()=>navigate({name:"home"})} lotId={route.params&&route.params.lotId}/>}
-            {route.name==="dist.reroute"&&<ReroutePage onBack={()=>navigate({name:"home"})} lotId={route.params&&route.params.lotId}/>}
-            {route.name==="dist.dispute"&&<DisputePage onBack={()=>navigate({name:"home"})} lotId={route.params&&route.params.lotId}/>}
+            {route.name==="fpo.pre-cool"&&<PreCoolBookingPage onBack={()=>navigate({name:"home"})} lotId={route.params && route.params.lotId}/>}
+            {route.name==="fpo.find-reefer"&&<FindReeferPage onBack={()=>navigate({name:"home"})} lotId={route.params && route.params.lotId}/>}
+            {route.name==="dist.nudge"&&<NudgeSOPPage onBack={()=>navigate({name:"home"})} lotId={route.params && route.params.lotId}/>}
+            {route.name==="dist.reroute"&&<ReroutePage onBack={()=>navigate({name:"home"})} lotId={route.params && route.params.lotId}/>}
+            {route.name==="dist.dispute"&&<DisputePage onBack={()=>navigate({name:"home"})} lotId={route.params && route.params.lotId}/>}
             {route.name==="retailer.cart"&&<CartPage onBack={()=>navigate({name:"home"})} items={cart} setItems={setCart}/>}
           </Shell>
           {!motion && <div className="mt-4 text-sm text-yellow-700">Animation lib not loaded; rendering without motion.</div>}
@@ -519,8 +538,15 @@
       );
     }
 
-    const root=createRoot(document.getElementById("root"));
-    root.render(<App/>);
+    try{
+      const rootEl=document.getElementById("root");
+      const root=createRoot(rootEl);
+      root.render(<App/>);
+    }catch(e){
+      const box=document.getElementById("errbox"), msg=document.getElementById("errmsg");
+      if(box&&msg){ box.style.display="block"; msg.textContent=e.stack||e.message||String(e); }
+      console.error("Mount error:", e);
+    }
   </script>
 </body>
 </html>
