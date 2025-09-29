@@ -1,14 +1,21 @@
-html_path = "/mnt/data/index.html"
-content = """<!doctype html>
+# Write a clean, deployable single-file React app (index.html) that runs via CDN on GitHub Pages.
+# It includes React 18, ReactDOM, Tailwind, Framer Motion (UMD), and Babel Standalone.
+# The code compiles TSX in-browser. No build step required.
+
+html = r"""<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ColdChainX – CCaaP Prototype</title>
+    <!-- Tailwind (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- React 18 + ReactDOM (UMD) -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <!-- Framer Motion (UMD) -->
     <script src="https://unpkg.com/framer-motion@11.0.0/dist/framer-motion.umd.js"></script>
+    <!-- Babel Standalone to transpile TSX in the browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       html, body, #root { height: 100%; }
@@ -19,6 +26,8 @@ content = """<!doctype html>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>Please enable JavaScript to run this app.</noscript>
+
     <script type="text/babel" data-presets="typescript,react">
       const { useMemo, useState } = React;
       const { createRoot } = ReactDOM;
@@ -27,8 +36,21 @@ content = """<!doctype html>
 
       const roles = ["FPO", "Distributor", "Retailer"] as const;
       type Role = typeof roles[number];
+
       type Lot = { id: string; crop: string; variety: string; weight: number; score: number; days: number };
-      type RouteName = "home" | "fpo.pre-cool" | "fpo.find-reefer" | "dist.nudge" | "dist.reroute" | "dist.dispute" | "dist.build" | "retailer.cart" | "retailer.qc" | "retailer.fast";
+
+      type RouteName =
+        | "home"
+        | "fpo.pre-cool"
+        | "fpo.find-reefer"
+        | "dist.nudge"
+        | "dist.reroute"
+        | "dist.dispute"
+        | "dist.build"
+        | "retailer.cart"
+        | "retailer.qc"
+        | "retailer.fast";
+
       type Route = { name: RouteName; params?: Record<string, any> };
 
       const seedLots: Lot[] = [
@@ -40,7 +62,7 @@ content = """<!doctype html>
       const nextLotId = (countSoFar: number, prefix = "LOT-NSK-") => {
         const n = countSoFar + 1;
         const padded = String(n).padStart(3, "0");
-        return `${prefix}${padded}`;
+        return \`\${prefix}\${padded}\`;
       };
 
       function Header({ role, setRole, navigate }: { role: Role; setRole: (r: Role) => void; navigate: (r: Route) => void }) {
@@ -49,7 +71,11 @@ content = """<!doctype html>
             <div className="text-2xl font-bold">ColdChainX</div>
             <div className="flex items-center gap-3">
               {roles.map((r) => (
-                <button key={r} onClick={() => { setRole(r); navigate({ name: "home" }); }} className={`px-3 py-1 rounded-full border ${role === r ? "bg-gray-900 text-white" : "bg-white"}`}>{r}</button>
+                <button
+                  key={r}
+                  onClick={() => { setRole(r); navigate({ name: "home" }); }}
+                  className={\`px-3 py-1 rounded-full border \${role === r ? "bg-gray-900 text-white" : "bg-white"}\`}
+                >{r}</button>
               ))}
             </div>
           </div>
@@ -76,9 +102,10 @@ content = """<!doctype html>
 
       function ScoreChip({ score }: { score: number }) {
         const color = score >= 90 ? "bg-green-100 text-green-800" : score >= 75 ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800";
-        return <span className={`px-2 py-1 rounded-full text-xs ${color}`}>{score}</span>;
+        return <span className={\`px-2 py-1 rounded-full text-xs \${color}\`}>{score}</span>;
       }
 
+      /* -------------------- FPO -------------------- */
       function FPOView({ navigate }: { navigate: (r: Route) => void }) {
         const [lots, setLots] = useState<Lot[]>(seedLots);
         const [form, setForm] = useState({ crop: "", variety: "", weight: "" });
@@ -93,7 +120,7 @@ content = """<!doctype html>
           <div className="grid gap-6">
             <div className="grid grid-cols-3 gap-4">
               <KPI label="Accepted-weight %" value="82%" hint="Accepted weight / total delivered in last 30 days" />
-              <KPI label="Active lots" value={`${lots.length}`} />
+              <KPI label="Active lots" value={\`\${lots.length}\`} />
               <KPI label="Next payout" value="T+2 days" />
             </div>
 
@@ -234,6 +261,7 @@ content = """<!doctype html>
         );
       }
 
+      /* -------------------- DISTRIBUTOR -------------------- */
       function DistributorView({ navigate }: { navigate: (r: Route) => void }) {
         const lanes = [
           { name: "Nashik → Mumbai DC", km: 175, co: "High", risk: "Low" },
@@ -316,7 +344,7 @@ content = """<!doctype html>
 
         return (
           <div>
-            <SubHeader title={`Build Load – ${lane}`} onBack={onBack} />
+            <SubHeader title={\`Build Load – \${lane}\`} onBack={onBack} />
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-2xl border p-4 grid gap-3">
                 <div className="text-sm text-gray-600">Vehicle capacity</div>
@@ -340,13 +368,13 @@ content = """<!doctype html>
 
                 <div className="text-sm font-medium">Utilization</div>
                 <div className="util-bar">
-                  <div className="util-fill" style={{width:`${util}%`, background: util>=90 ? '#16a34a' : util>=60 ? '#f59e0b' : '#ef4444'}}></div>
+                  <div className="util-fill" style={{width:\`\${util}%\`, background: util>=90 ? '#16a34a' : util>=60 ? '#f59e0b' : '#ef4444'}}></div>
                 </div>
                 <div className="text-xs text-gray-600">{totalKg} / {vehicleCap} kg ({util}%)</div>
 
                 <div className="rounded-xl bg-gray-50 p-3 text-sm grid gap-1">
                   <div>Lane: {lane} • {km} km</div>
-                  <div>Est. cost: ₹{cost.toLocaleString()} {totalKg?`• ~₹${perKg}/kg`:''}</div>
+                  <div>Est. cost: ₹{cost.toLocaleString()} {totalKg?`• ~₹\${perKg}/kg`:''}</div>
                   <div>Compliance: SOP {tempSet}°C / 90% RH • {crate}</div>
                 </div>
               </div>
@@ -403,7 +431,7 @@ content = """<!doctype html>
         const [sent, setSent] = useState(false);
         return (
           <div>
-            <SubHeader title={`Nudge SOP – ${lotId || "Select lot"}`} onBack={onBack} />
+            <SubHeader title={\`Nudge SOP – \${lotId || "Select lot"}\`} onBack={onBack} />
             <div className="rounded-2xl border p-4 grid gap-3 max-w-2xl">
               <div className="text-sm text-gray-600">Action</div>
               <select className="border p-2 rounded-xl" value={nudge} onChange={(e)=>setNudge(e.target.value)}>
@@ -427,7 +455,7 @@ content = """<!doctype html>
         const [delta] = useState<{ eta: string; cost: number }>({ eta: "+38 min", cost: 900 });
         return (
           <div>
-            <SubHeader title={`Reroute – ${lotId || "Select lot"}`} onBack={onBack} />
+            <SubHeader title={\`Reroute – \${lotId || "Select lot"}\`} onBack={onBack} />
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-2xl border p-4 grid gap-3">
                 <div className="text-sm text-gray-600">New destination</div>
@@ -466,11 +494,10 @@ content = """<!doctype html>
       function DisputePage({ onBack, lotId }: { onBack: () => void; lotId?: string }) {
         const [type, setType] = useState("Temp breach claim");
         const [desc, setDesc] = useState("");
-        thewindow=window; // avoid TS removing side effect
         const [raised, setRaised] = useState(false);
         return (
           <div>
-            <SubHeader title={`Raise Dispute – ${lotId || "Select lot"}`} onBack={onBack} />
+            <SubHeader title={\`Raise Dispute – \${lotId || "Select lot"}\`} onBack={onBack} />
             <div className="rounded-2xl border p-4 grid gap-3 max-w-2xl">
               <div className="grid md:grid-cols-2 gap-3">
                 <div>
@@ -498,6 +525,7 @@ content = """<!doctype html>
         );
       }
 
+      /* -------------------- RETAILER -------------------- */
       function RetailerView({ onBuy, cart, setCart, navigate }: { onBuy: (lot: Lot) => void; cart: { lot: Lot; qty: number }[]; setCart: (v: { lot: Lot; qty: number }[]) => void; navigate: (r: Route)=>void }) {
         const [sortKey, setSortKey] = useState<"score" | "days" | "weight">("score");
         const sorted = useMemo(() => {
@@ -604,7 +632,7 @@ content = """<!doctype html>
         const [done, setDone] = useState(false);
         return (
           <div>
-            <SubHeader title={`Gate-in QC – ${lotId || "Select lot"}`} onBack={onBack} />
+            <SubHeader title={\`Gate-in QC – \${lotId || "Select lot"}\`} onBack={onBack} />
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-2xl border p-4 grid gap-3">
                 <div className="text-sm text-gray-600">Temperature on arrival within range (≤4°C)?</div>
@@ -626,7 +654,7 @@ content = """<!doctype html>
                 <ul className="list-disc ml-5 space-y-1">
                   <li>QC status: {(tempOK && appearanceOK) ? "Pass" : "Conditional pass"}</li>
                   <li>Grade: {grade}</li>
-                  <li>Accepted: {acceptKg} kg {weightDiff?`(Δ weighbridge: ${weightDiff} kg)`:''}</li>
+                  <li>Accepted: {acceptKg} kg {weightDiff?`(Δ weighbridge: \${weightDiff} kg)`:''}</li>
                   <li>Actions: put-away to {grade} rack • auto-generate GRN</li>
                 </ul>
                 {done && <div className="text-green-700 mt-2">QC completed. GRN created and inventory updated.</div>}
@@ -643,7 +671,7 @@ content = """<!doctype html>
         const [confirmed, setConfirmed] = useState(false);
         return (
           <div>
-            <SubHeader title={`Fast-track – ${lotId || "Select lot"}`} onBack={onBack} />
+            <SubHeader title={\`Fast-track – \${lotId || "Select lot"}\`} onBack={onBack} />
             <div className="grid md:grid-cols-2 gap-4">
               <div className="rounded-2xl border p-4 grid gap-3">
                 <div className="text-sm text-gray-600">Assign dock</div>
@@ -679,40 +707,7 @@ content = """<!doctype html>
         );
       }
 
-      function CartPage({ onBack, items, setItems }: { onBack: () => void; items: { lot: Lot; qty: number }[]; setItems: (v: { lot: Lot; qty: number }[]) => void }) {
-        const totalKg = items.reduce((s,i)=> s + i.qty, 0);
-        return (
-          <div>
-            <SubHeader title="Cart" onBack={onBack} />
-            {items.length === 0 ? (
-              <div className="text-sm text-gray-600">Your cart is empty.</div>
-            ) : (
-              <div className="rounded-2xl border p-4 grid gap-3">
-                {items.map((it, idx) => (
-                  <div key={idx} className="flex items-center justify-between gap-2">
-                    <div className="text-sm">{it.lot.crop} • {it.lot.variety} ({it.lot.id})</div>
-                    <div className="flex items-center gap-2">
-                      <button className="px-2 py-1 rounded-lg border" onClick={()=>{
-                        const copy = [...items]; copy[idx].qty = Math.max(0, copy[idx].qty - 100); setItems(copy.filter(x=>x.qty>0));
-                      }}>-100kg</button>
-                      <div className="w-24 text-right">{it.qty} kg</div>
-                      <button className="px-2 py-1 rounded-lg border" onClick={()=>{
-                        const copy = [...items]; copy[idx].qty = copy[idx].qty + 100; setItems(copy);
-                      }}>+100kg</button>
-                    </div>
-                  </div>
-                ))}
-                <div className="flex justify-between pt-2 border-t mt-2 text-sm">
-                  <div>Total</div>
-                  <div>{totalKg} kg</div>
-                </div>
-                <button className="px-4 py-2 rounded-xl bg-gray-900 text-white w-max">Checkout (mock)</button>
-              </div>
-            )}
-          </div>
-        );
-      }
-
+      /* -------------------- APP -------------------- */
       function App() {
         const [role, setRole] = useState<Role>("FPO");
         const [route, setRoute] = useState<Route>({ name: "home" });
@@ -731,7 +726,7 @@ content = """<!doctype html>
           <div className="max-w-6xl mx-auto p-6">
             <Header role={role} setRole={setRole} navigate={navigate} />
             {motion ? (
-              <motion.div key={`${role}-${route.name}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+              <motion.div key={\`\${role}-\${route.name}\`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
                 {route.name === "home" && role === "FPO" && <FPOView navigate={navigate} />}
                 {route.name === "home" && role === "Distributor" && <DistributorView navigate={navigate} />}
                 {route.name === "home" && role === "Retailer" && <RetailerView onBuy={onBuy} cart={cart} setCart={setCart} navigate={navigate} />}
@@ -755,28 +750,36 @@ content = """<!doctype html>
             <div className="mt-10 text-xs text-gray-500">
               <div className="font-semibold mb-1">Extra interactive touches</div>
               <ul className="list-disc ml-5 space-y-1">
-                <li>Retailer: Gate-in QC & Fast-track workflows.</li>
-                <li>Distributor: Build Load util & cost, then tender.</li>
-                <li>Retailer inline cart; 100kg step.</li>
-                <li>Pre-cool booking & Reefer cost estimator.</li>
+                <li>Retailer: Gate-in QC & Fast-track workflows; inline cart persists (100kg step).</li>
+                <li>Distributor: Build Load lets you assemble lots, see utilization & cost, then post tender.</li>
+                <li>FPO: Pre-cool booking & Find Reefer fully clickable.</li>
+                <li>KPI tooltips and marketplace sort controls included.</li>
               </ul>
             </div>
           </div>
         );
       }
 
+      // -------------------- Mount --------------------
       const root = createRoot(document.getElementById("root"));
       root.render(<App />);
 
-      (() => { try {
-        console.assert(nextLotId(0) === "LOT-NSK-001", "ID should be LOT-NSK-001 for count 0");
-        console.assert(nextLotId(9) === "LOT-NSK-010", "ID should be LOT-NSK-010 for count 9");
-        console.assert(nextLotId(99) === "LOT-NSK-100", "ID should roll to 100 after 99");
-      } catch(e) { console.error("Smoke tests failed", e); } })();
+      // -------------------- Tiny inline tests (console) --------------------
+      (() => {
+        try {
+          console.assert(nextLotId(0) === "LOT-NSK-001", "ID pad 001");
+          console.assert(nextLotId(9) === "LOT-NSK-010", "ID pad 010");
+          console.assert(nextLotId(123) === "LOT-NSK-124", "ID 124");
+          const n = 5;
+          const s = String(n).padStart(3, "0");
+          console.assert(s === "005", "padStart works");
+        } catch (e) { console.error("Inline tests failed:", e); }
+      })();
     </script>
   </body>
 </html>
 """
-with open(html_path, "w", encoding="utf-8") as f:
-    f.write(content)
-html_path
+with open("/mnt/data/index.html", "w", encoding="utf-8") as f:
+    f.write(html)
+
+"/mnt/data/index.html"
